@@ -1,0 +1,187 @@
+
+serviceAccountName: devoncloud
+
+image:
+  repository: your_image_repository
+  tag: you_tag_version
+  pullPolicy: Always
+  pullSecrets: []
+
+replicaCount: 1
+
+autoscaling:
+  enabled: false
+  minReplicas: 1
+  maxReplicas: 100
+  targetCPUUtilizationPercentage: 80
+  targetMemoryUtilizationPercentage: 80
+
+updateStrategyType: RollingUpdate
+
+# RollingUpdateStrategy is ignored when StrategyType is Recreate.
+rollingUpdateStrategy: {}
+#  maxUnavailable: 25%
+#  maxSurge: 25%
+
+revisionHistoryLimit: 1
+
+containerPort: 8080
+
+containerExtraPorts: []
+#- name: ajp
+#  containerPort: 8081
+#  protocol: TCP
+
+service:
+  type: ClusterIP
+  port: 80
+  targetPort: 8080
+#  nodePort: 30000
+  externalTrafficPolicy: Cluster
+  extraPorts: []
+#  - name: https
+#    port: 443
+#    targetPort: 8443
+#    protocol: TCP
+  annotations: {}
+#    konghq.com/host-header: product.devoncloud.svc.cluster.local
+#    ingress.kubernetes.io/service-upstream: "true"
+
+ingress:
+  enabled: true
+  rules:
+  - host: null
+    http:
+      paths:
+      - pathType: Prefix
+        path: /
+        backend:
+          service:
+            name: backend_service_name
+            port: 
+              number: 80
+  tls: []
+#  - secretName: your_tls_name
+#    hosts:
+#    - your_service_domain_name
+  defaultBackendService: {}
+#    name: default_backend_service_name
+#    port:
+#      number: 80
+  annotations: 
+    kubernetes.io/ingress.class: nginx
+#    kubernetes.io/tls-acme: "true"
+#    konghq.com/preserve-host: "false"
+    
+podAnnotations:
+  appmesh.k8s.aws/sidecarInjectorWebhook: disabled
+
+
+configMapData:
+## LENA Configuration
+#  LENA_CONFIG_TEMPLATE_ID: service_cluster_id
+#  LENA_MANAGER_ADDRESS: lena-manager_FQDN:7700
+#  LENA_MANAGER_MONITORING_PORT: 16100
+#  LENA_SERVICE_PORT: 8080
+#  LENA_SPRING_PROFILES_ACTIVE: dev
+#  LENA_APP_FILE: app.jar
+#  LENA_APP_DIR: /usr/local/lena
+#  LENA_JVM_HEAP_SIZE: 512
+#  LENA_JVM_METASPACE_SIZE: 128
+#  LENA_JVM_OPTIONS: >-
+#    -Djava.security.egd=file:/dev/./urandom
+#    -Dfile.encoding=UTF-8
+#  LOG_OUTPUT_TYPE: console
+
+
+podSecurityContext: {}
+#  fsGroup: 2000
+
+containerSecurityContext: {}
+  # capabilities:
+  #   drop:
+  #   - ALL
+  # readOnlyRootFilesystem: true
+  # runAsNonRoot: true
+  # runAsUser: 1000
+
+healthCheck: {}
+#  livenessProbe:
+#    httpGet:
+#      path: /
+#      port: 8080
+#    initialDelaySeconds: 120
+#    periodSeconds: 10
+#    failureThreshold: 6
+#    timeoutSeconds: 5
+#    successThreshold: 1
+#  readinessProbe:
+#    httpGet:
+#      path: /
+#      port: 8080
+#    initialDelaySeconds: 30
+#    periodSeconds: 5
+#    failureThreshold: 3
+#    timeoutSeconds: 3
+#    successThreshold: 1
+
+lifecycle: {}
+#  postStart:
+#    exec:
+#      command: [ "/bin/sh", "-c", "ls" ]
+#  preStop:
+#    exec:
+#      command: [ "/bin/sh", "-c", "ls" ]
+
+minReadySeconds: 0
+
+terminationGracePeriodSeconds: 10
+
+initContainers: []
+#- name: init
+#  image: bashell/alpine-bash
+#  imagePullPolicy: Always
+#  command: [ "/bin/bash", "-c", "echo UUID=1 >> /config/UUID.info" ]
+#  volumeMounts:
+#  - name: config
+#    mountPath: /config
+
+sidecarContainers: [] 
+#- name: sidecar
+#  image: bashell/alpine-bash
+#  imagePullPolicy: Always
+#  command: [ "/bin/bash", "-c", "tail -f /logs/1.log" ]
+#  volumeMounts:
+#  - name: logs
+#    mountPath: /logs
+
+## Create volumes and mount volumes to main container
+volumes: {}
+#  emptyDir:
+#  - name: config
+#    mountPath: /config
+#  - name: logs
+#    mountPath: /logs
+#  nfs:
+#  - name: sorc
+#    server: 10.10.10.10
+#    path: /sorc
+#    mountPath: /sorc
+
+resources: {}
+#  limits:
+#    cpu: 100m
+#    memory: 128Mi
+#  requests:
+#    cpu: 100m
+#    memory: 128Mi
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}
+
+
+
+

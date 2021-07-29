@@ -1,0 +1,29 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "devoncloud.fullname" . }}
+  labels:
+    {{- include "devoncloud.labels" . | nindent 4 }}
+  {{- with .Values.service.annotations }}
+  annotations:
+  {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  selector:
+    {{- include "devoncloud.selectorLabels" . | nindent 4 }}
+  {{- with .Values.service }}
+  ports:
+  - name: service
+    port: {{ .port }}
+    targetPort: {{ .targetPort }}
+    {{- if eq .type "NodePort" }}
+    nodePort: {{ .nodePort | default "null" }}
+    {{- end }}
+    protocol: TCP
+  {{- with .extraPorts}}
+  {{- toYaml . | nindent 2 }}
+  {{- end }}
+  type: {{ .type }}
+  externalTrafficPolicy: {{ .externalTrafficPolicy }}
+  {{- end }}
+  

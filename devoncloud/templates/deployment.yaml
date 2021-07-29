@@ -1,0 +1,119 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "devoncloud.fullname" . }}
+  labels:
+    {{- include "devoncloud.labels" . | nindent 4 }}
+spec:
+  {{- if not .Values.autoscaling.enabled }}
+  replicas: {{ .Values.replicaCount }}
+  {{- end }}
+  selector:
+    matchLabels:
+      {{- include "devoncloud.selectorLabels" . | nindent 6 }}
+  strategy:
+    type: {{ .Values.updateStrategyType }}
+    {{- if eq .Values.updateStrategyType "RollingUpdate" }}
+    {{- with .Values.rollingUpdateStrategy }}
+    rollingUpdate: 
+      {{- toYaml . | nindent 6 }}
+    {{- end}}
+    {{- end}}
+  revisionHistoryLimit: {{ .Values.revisionHistoryLimit }}
+  minReadySeconds: {{ .Values.minReadySeconds }}
+  template:
+    metadata:
+      labels:
+        {{- include "devoncloud.selectorLabels" . | nindent 8 }}
+      {{- with .Value.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}        
+    spec:
+      {{- with .Values.image.pullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.initContainers }}
+      initContainers:
+      {{- toYaml . | nindent 6 }}
+      {{- end }}
+      containers:
+      - name: was
+        {{- with .Values.containerSecurityContext }}
+        securityContext:
+          {{- toYaml . | nindent 10 }}
+        {{- end }}
+        image: {{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}
+        imagePullPolicy: {{ .Values.image.pullPolicy }}
+        ports:
+        - name: service
+          containerPort: {{ .Values.containerPort }}
+          protocol: TCP
+        {{- with .Values.containerExtraPorts }}
+        {{- toYaml . | nindent 8 }}
+        {{- end}}
+        {{- with .Values.healthCheck }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }} 
+        {{- with .Values.lifecycle }}
+        lifecycle: 
+          {{- toYaml . | nindent 10 }}
+        {{- end }} 
+        envFrom:
+        - configMapRef:
+            name: {{ include "devoncloud.fullname" . }}
+        {{- with .Values.volumes }}
+        volumeMounts:
+        {{- range $KEY, $VALUE := . }}
+        {{- range $VALUE }}
+        - name: {{ .name }}
+          mountPath: {{ .mountPath }}
+        {{- end }}
+        {{- end }}
+        {{- end }}
+        {{- with .Values.resources }}
+        resources:
+          {{- toYaml . | nindent 10 }}
+        {{- end }}
+      {{- with .Values.sidecarContainers }}
+      {{- toYaml . | nindent 6 }}
+      {{- end }}
+      {{- with .Values.podSecurityContext }}
+      securityContext:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}      
+      {{- with .Values.volumes }}
+      volumes:
+      {{- range $KEY, $VALUE := . }}
+      {{- if eq $KEY "emptyDir" }}
+      {{- range $VALUE }}
+      - name: {{ .name }}
+        emptyDir: {}
+      {{- end }}
+      {{- end }}
+      {{- if eq $KEY "nfs" }}
+      {{- range $VALUE }}
+      - name: {{ .name }}
+        nfs:
+          server: {{ .server }}
+          path: {{.path }}
+      {{- end }}
+      {{- end }}
+      {{- end }}
+      {{- end }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      terminationGracePeriodSeconds: {{ .Values.terminationGracePeriodSeconds }}
+      serviceAccountName: {{ .Values.serviceAccountName }}
+      
