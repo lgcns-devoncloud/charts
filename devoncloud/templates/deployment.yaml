@@ -25,7 +25,7 @@ spec:
     metadata:
       labels:
         {{- include "devoncloud.selectorLabels" . | nindent 8 }}
-      {{- with .Value.podAnnotations }}
+      {{- with .Values.podAnnotations }}
       annotations:
         {{- toYaml . | nindent 8 }}
       {{- end }}        
